@@ -1,11 +1,19 @@
 # Api de livros
 
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
 
 app = FastAPI()
 
 # Simulando um banco de dados com um dicionário
 livros_db = {}
+
+# Definindo o modelo de dados para um livro
+class Livro(BaseModel):
+    titulo: str
+    autor: str
+    ano: int
 
 @app.get("/livros")
 def listar_livros():
@@ -16,26 +24,21 @@ def listar_livros():
 
 #id nome autor ano    
 @app.post("/addlivros")
-def post_livros(id: int, titulo: str, autor: str, ano: int):
+def post_livros(id: int, livro: Livro):
     if id in livros_db:
         raise HTTPException(status_code=400, detail="Livro já cadastrado.")
     else:
-        livros_db[id] = {"titulo": titulo, "autor": autor, "ano": ano}
+        livros_db[id] = livro.dict()
         return {"mensagem": "Livro cadastrado com sucesso."}
     
 @app.put("/atualizarlivros/{id}")
-def put_livros(id: int, titulo: str, autor: str, ano: int):
+def put_livros(id: int, livro: Livro):
     livros = livros_db.get(id)
     if not livros:
         raise HTTPException(status_code=404, detail="Livro não encontrado.")
     else:
-        if titulo:
-            livros["titulo"] = titulo
-        if autor:
-            livros["autor"] = autor
-        if ano:
-            livros["ano"] = ano
-
+        livros_db[id] = livro.dict()
+        
         return {"mensagem": "Livro atualizado com sucesso."}
 
 @app.delete("/deletarlivros/{id}")

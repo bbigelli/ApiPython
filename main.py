@@ -4,7 +4,27 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 
-app = FastAPI()
+app = FastAPI(
+    title="API de Livros",
+    description="Uma API simples para gerenciar livros.",
+    version="1.0.0",
+    contact={
+        "name": "Bruno Bigelli",
+        "email": "bbigelli@hotmail.com",
+        "url": "https://github.com/bbigelli"
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+    },
+    openapi_tags=[
+        {
+            "name": "livros",
+            "description": "Operações relacionadas a livros."
+        }
+    ]
+
+)
 
 # Simulando um banco de dados com um dicionário
 livros_db = {}

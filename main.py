@@ -1,8 +1,9 @@
-# Api de livros
-
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Optional
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+import secrets
+import os
 
 app = FastAPI(
     title="API de Livros",
@@ -29,14 +30,30 @@ app = FastAPI(
 # Simulando um banco de dados com um dicionário
 livros_db = {}
 
+login = "admin"
+senha = "123456"
+
+security = HTTPBasic()
+
 # Definindo o modelo de dados para um livro
 class Livro(BaseModel):
     titulo: str
     autor: str
     ano: int
 
+def autenticar(credentials: HTTPBasicCredentials = Depends(security)):
+    is_username_correct = secrets.compare_digest(credentials.username, login)
+    is_password_correct = secrets.compare_digest(credentials.password, senha)
+
+    if not (is_username_correct and is_password_correct):
+        raise HTTPException(
+            status_code=401,
+            detail="Credenciais inválidas",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
 @app.get("/livros")
-def listar_livros():
+def listar_livros(credentials: HTTPBasicCredentials = Depends(autenticar)):
     if not livros_db:
         return {"mensagem": "Nenhum livro encontrado."}
     else:
@@ -44,7 +61,7 @@ def listar_livros():
 
 #id nome autor ano    
 @app.post("/addlivros")
-def post_livros(id: int, livro: Livro):
+def post_livros(id: int, livro: Livro, credentials: HTTPBasicCredentials = Depends(autenticar)):
     if id in livros_db:
         raise HTTPException(status_code=400, detail="Livro já cadastrado.")
     else:
@@ -52,7 +69,7 @@ def post_livros(id: int, livro: Livro):
         return {"mensagem": "Livro cadastrado com sucesso."}
     
 @app.put("/atualizarlivros/{id}")
-def put_livros(id: int, livro: Livro):
+def put_livros(id: int, livro: Livro, credentials: HTTPBasicCredentials = Depends(autenticar)):
     livros = livros_db.get(id)
     if not livros:
         raise HTTPException(status_code=404, detail="Livro não encontrado.")
@@ -62,7 +79,7 @@ def put_livros(id: int, livro: Livro):
         return {"mensagem": "Livro atualizado com sucesso."}
 
 @app.delete("/deletarlivros/{id}")
-def deletar_livros(id: int):
+def deletar_livros(id: int, credentials: HTTPBasicCredentials = Depends(autenticar)):
     if id not in livros_db:
         raise HTTPException(status_code=404, detail="Livro não encontrado.")
     else:

@@ -64,9 +64,15 @@ def listar_livros(page int = 1, limit int = 10, credentials: HTTPBasicCredential
     end = start + limit
     livros_paginados = [
         {"id": id, titulo: livro["titulo"], autor: livro["autor"], ano: livro["ano"]}
-        for id, livro in list(livros_db.items())[start:end]
-        
+        for id, livro in list(livros_db.items())[start:end]        
     ]
+    return {
+        "page": page,
+        "limit": limit,
+        "total": len(livros_db),
+        "livros": livros_paginados
+    }
+    
 
 #id nome autor ano    
 @app.post("/addlivros")
